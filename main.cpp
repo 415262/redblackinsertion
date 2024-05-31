@@ -90,6 +90,101 @@ int main() {
 
 //--------------------------------------------------------------------------------------------------
 
+void RBdel(node* &node) {
+  do {
+    Node* parent = node->parent;
+    Node* sibling = new Node();
+    Node* distant = new Node();//distant newphew
+    Node* close = new Node();//close nephew
+    bool isLeft = true;
+    if (parent->lnode == node) {
+      sibling = parent->rnode;
+      close = sibling->lnode;
+      distant = sibling->rnode;
+    }
+    else {
+      sibling = parent->lnode;
+      close = sibling->rnode;
+      distant = sibling->lnode;
+      isLeft = false;
+    }
+
+    if (sibling->isRed) {//case 3
+      rotate(parent, isLeft);
+      parent->isRed = true;
+      sibling->isRed = false;
+      sibling = close;
+      rotate(parent, isLeft);
+      parent->isRed = true;
+      sibling->isRed = false;
+      sibling = close;
+      if (isLeft) {
+	distant = sibling->rnode;
+      }
+      else {
+	distant = sibling->lnode;
+      }
+      if (distant != NULL && distant->isRed) {
+	//copy-paste case 6
+	rotate(parent, isLeft);
+	sibling->isRed = parent->isRed;
+	parent->isRed = false;
+	distant->isRed = false;
+	return;
+      }
+      if (isLeft) {
+	close = sibling->lnode;
+      }
+      else {
+	close = sibling->rnode;
+      }
+      //Normally would compare case 5 and 4, but this already falls through to that
+      
+    }
+    if (distant != NULL && distant->isRed) {//case 6
+      rotate(parent, isLeft);
+      sibling->isRed = parent->isRed;
+      parent->isRed = false;
+      distant->isRed = false;
+      return;
+    }
+
+    if (close != NULL && close->isRed) {//case 5
+      rotate(sibling, !isLeft);
+      sibling->isRed = true;
+      close->isRed = false;
+      distant = sibling;
+      sibling = close;
+    }
+    if (parent->isRed) {//case 4
+      sibling->isRed = true;
+      parent->isRed = false;
+      return;
+    }
+    if (parent == NULL) {//case 1
+      return;
+    }
+    //case 2
+    sibling->isRed = true;
+    node = parent;
+    
+  } while ((parent = node->parent) != NULL);
+  return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 bool isInnerChild(Node* &node, Node* &pnode, Node* &gnode) {//checks if Node is the inner child (toward G) of P
   bool isPLeft = false;
   bool isNLeft = false;
@@ -348,6 +443,7 @@ void deleteFinal(Node* &head, Node* &node) {
     suc->lnode = node->lnode;
     suc->lnode->parent = suc;
   }
+  RBdel(node);
 }
 void shift(Node* &head, Node* pnode, Node* cnode) {
   if (pnode->parent == NULL) {
